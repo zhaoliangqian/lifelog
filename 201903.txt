@@ -14,3 +14,12 @@
 fci项目中采用vue，跳转页面报错：
 请采用this.$router.push('real_path')
 
+LRUCache实现：
+知乎作者一篇lrucahe实现，采用自己实现的双向链表和hashmap结合。作者觉得linkedhashmap无法实现，但是在看dubbo的源码的时候发现，dubbo中的lrucache就是以linkedhashmap实现的
+于是了解一下原理：linkedhashmap提供构造函数传入accessorder，如果传入值为true，hashmap会在插入时检测是否达到map最大容量， 如果容量达到最大值，则将列表头部的最近最少访问
+节点删除，从而实现lru
+感悟：在写代码时，切勿想当然认为自己的是最好的。
+
+redis Lru实现：
+redis采用的lru为了避免构造的数据结构占用内存问题，使用随机算法选择key，进行检查最老的元素，从而进行释放。
+感悟：在实际项目中，根据实际情况选择合适的策略，不一定要完整实现一个比较耗时或者耗内存的算法。
