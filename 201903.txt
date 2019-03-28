@@ -160,9 +160,29 @@ Redis是单线程还是多线程的？Redis可支持的最大并发是多少？
 	 过期lru、过期ttl、过期随机、全集lru、全集随机、禁止
 如何实现分布式锁：
     redis实现代码设计：
-	zookeeper实现代码设计：
+	    lock: 
+		1 int status = setnx(key, current_time + expire_time) status==1,则成功否则进入步骤2
+		2 old_time = get(key, "0") old_time > current_time 失败，否则进入3
+		3 new_time = current_time + expire_time, old_time_2 = getset(key, new_time)  old_time == old_time2 则成功，否则获取失败
+		unlock: 
+		1 获取当前 value = get(key, '0') 如果 value > current_time 进入2
+		2 del(key)
+		但是这样实现的redis锁是不可重入的，另外分布式专家对redisson分布式锁提出过质疑，因此在安全要求较高的领域可以考虑使用zk锁；
+		https://mp.weixin.qq.com/s/1bPLk_VZhZ0QYNZS8LkviA
+		https://www.cnblogs.com/seesun2012/p/9214653.html
+	 zookeeper实现代码设计：
+	    1 在zookeeper一个普通节点parent下创建临时顺序节点；
+		2 获取parent下的节点列表； 
+		3 判断自己是否是第一个节点，是则获取锁成功，否则进入步骤4
+		4 查找前一个节点，读锁查找前一个写节点，写锁查找前一个节点
+		5 在前一个节点上监听，节点被删除，当前线程获得锁 ； 
+		分析： 
+		该锁性能弱于redis，但是可靠性更加高，是一种读写锁、不可重入锁； 
 	db实现（性能瓶颈不建议使用）:
-Jvm内存结构如何划分？哪些是线程共享的区域，哪些是线程独占的区域？	 
+	    1、数据库的乐观锁；
+		2、数据库的一行记录；
+Jvm内存结构如何划分？哪些是线程共享的区域，哪些是线程独占的区域
+    
 （5）死锁是如何产生的？如何避免死锁？
 （6）Redis的内存穿透是什么？如何避免？
 （7）说一说本地对接项目和打印项目，工作中有什么亮点？
