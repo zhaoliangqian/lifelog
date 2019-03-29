@@ -182,18 +182,45 @@ Redis是单线程还是多线程的？Redis可支持的最大并发是多少？
 	    1、数据库的乐观锁；
 		2、数据库的一行记录；
 Jvm内存结构如何划分？哪些是线程共享的区域，哪些是线程独占的区域
-    
-（5）死锁是如何产生的？如何避免死锁？
-（6）Redis的内存穿透是什么？如何避免？
-（7）说一说本地对接项目和打印项目，工作中有什么亮点？
-（8）最近在看什么书？有哪些收获？
-（9）对敏捷开发的理解？
-（10）wait和sleep的区别？
-（11）哪些场景下需要用到MQ？
-3.阅文集团
-（1）说一下springMVC的请求流程？
-（2）B+树和B树有什么区别？
-（3）单例模式怎么写？应用场景有哪些？其他的设计模式的应用场景又有哪些？
+    线程私有：程序计数器、虚拟机栈、本地方法栈；
+	线程共享：方法区（以及运行时常量池）、堆、直接内存；
+死锁是如何产生的？如何避免死锁？
+    分析：有资源a、b，线程x、y，线程x持有a，并申请b的锁，y相反，形成死锁； 
+	避免：对资源顺序加锁
+Redis的内存穿透是什么？如何避免？
+    含义：缓存不命中，导致数据库查询特别大，容易对数据库的性能产生影响；
+	避免：可以有多种方案，如：采用存储空字符串，并且设置过期时间，这种方式多产生key，对redis内存不友好，也容易被攻击；bloomfilter，将有效值的id存入Bloomfilter，进行前置校验；
+对敏捷开发的理解？
+    理解：这是一种鼓励沟通、团队合作、与客户合作、拥抱变化的开发模式； 
+wait和sleep的区别？
+    区别： sleep是thread的方法、wait是object的方法；
+	sleep不会释放对象的锁、wait会释放对象锁，进入对象的等待区
+	sleep和wait都是可以被中断，抛出ire， 但是wait还可以被notify，从而进行对象锁获取准备。
+哪些场景下需要用到MQ？
+    异步处理系统、应用解耦、高并发系统的削峰、日志系统、通信
+说一下springMVC的请求流程？
+    servlet dispatcher分发请求，处理映射器找到对应的handler，请求适配器使用handler处理返回modelandview，视图解析器解析出view，记性视图渲染，最后返回response响应； 
+B+树和B树有什么区别？
+    b+树非叶子节点不存储数据，只作为索引用于导航，便于内存存储更多的索引，
+	b+树采用链表结构将叶子节点相连，加以提升遍历速度，并且增加相关数据的缓存命中率； 
+	b数由于非叶子节点中存储实际数据，因此可能数据路径更短，访问更加迅速
+	详细分析：https://www.cnblogs.com/vincently/p/4526560.html
+单例模式怎么写？应用场景有哪些？其他的设计模式的应用场景又有哪些？
+    简单的写法
+	public final static singletonInstance = new Object(); 缺点：类加载的时候初始化，可能带来没比要的开销 
+	double check写法：
+	public static Object getInstance() { 
+	    if (singletonInstance != null) {
+		    return singletonInstance; 
+		}
+		synchronize (TestClass.class) {
+		    if (null == singletonInstance) {
+			    singletonInstance = new TestClass();
+			}
+		}
+		return singletonInstance;
+	}
+	应用场景：
 （4）Kafka有什么特点？
 （5）线程都有哪些状态？各个状态间是如何转换的？线程的方法怎么用？
 yield()，join()等
@@ -236,6 +263,7 @@ yield()，join()等
 （1）Kafka中，如果消息的消费者消费失败，后续如何处理？会不会因此导致消息阻塞？
 （2）调用system.gc()方法，会立即执行垃圾fullGC吗？
 （3）多个线程操作hashMap会有什么现象？
+kafka的storm原理与应用
 Disruptor并发框架的原理
 java实现事件中心
 
@@ -244,4 +272,7 @@ fci系统ip模块开发：
 	具有批量预占功能，一个部署任务所需要的ip数量可以计算出来，可以进行批量预占ip，将预占ip存储在concurrentlinkedlist中用于方便获取
 	容器创建后，ip被锁定，记录需要锁定的ip
 	增加ip任务，扫描预占时间超过10分钟的ip，并进行释放；
+	
+29
+    线上账号模块存在一定的bug修改；
 	
