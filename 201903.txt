@@ -209,6 +209,7 @@ B+树和B树有什么区别？
     简单的写法
 	public final static singletonInstance = new Object(); 缺点：类加载的时候初始化，可能带来没比要的开销 
 	double check写法：
+	构造函数私有化 
 	public static Object getInstance() { 
 	    if (singletonInstance != null) {
 		    return singletonInstance; 
@@ -220,7 +221,35 @@ B+树和B树有什么区别？
 		}
 		return singletonInstance;
 	}
+	静态内部类：
+	class Test {
+	    private Test() {}
+		private static TestHelper {
+		    static singletonInstance = new Test();
+		}
+		
+	    public static getInstance() {
+		    return TestHelper.singletonInstance;
+		}
+	}
 	应用场景：
+	在应用内，只想有一份实例，资源共享的情况下，避免由于资源操作时导致的性能或损耗等如日志文件、应用配置；资源控制，单例模式可以更好的控制资源，如线程池；
+	其他设计模式：
+	23种设计模式的设计原则：开闭原则、里式替换、依赖倒转、接口隔离、最小知道、合成复用
+	设计模式分成三大类：
+	创建型：工厂、抽象工厂、单例、原型、建造者
+	    对于需要生产很多产品，这些产品拥有相同的接口时，可以采用工厂模式； 
+		工厂模式分为普通工厂和静态工厂，区别是是否需要构造 工厂实例；
+		抽象工厂：由于涉及模式中的开闭原则，可以在单纯增加工厂实现，实现扩展；
+		单例：在资源共享、资源控制的情况下可以使用，以减小资源消耗； 
+		建造者模式：将多个产品符合起来的工厂模式；
+		原型模式：从一个对象copy生成新对象的，这种方式实现对原有对象的保护，当然建立在深拷贝的基础之上； 
+	适配型：适配器、
+	    适配器：类适配器【将类包装成满足特定接口】、对象适配器【将对象转换成满足特定接口】、接口适配器【通过抽象类实现接口，从而现实子类不需要实现全部接口方法】，使用场景
+		    当有动机修改一个已经投产的接口时，可以采用；
+		
+		
+解释rpc的工作原理	
 （4）Kafka有什么特点？
 （5）线程都有哪些状态？各个状态间是如何转换的？线程的方法怎么用？
 yield()，join()等
