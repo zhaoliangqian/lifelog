@@ -7,4 +7,39 @@ docker容器中的网络和宿主机的网络无法双向通信问题
 	https://github.com/kubernetes-client/java
 
 2:
-docker registry启动命令：docker run -d -p 5000:5000 -v `pwd`/data:/var/lib/registry --restart=always --name registry:latest
+docker命令：
+	docker registry启动命令：docker run -d -p 5000:5000 -v `pwd`/data:/var/lib/registry --restart=always --name registry:latest
+	docker ssl: 
+	openssl req -newkey rsa:2048 -nodes -sha256 -keyout certs/domain.key -x509 -days 365 -out certs/domain.crt
+	docker run -d -p 5000:5000 --restart=always --name registry \
+	  -v `pwd`/data:/var/lib/registry \
+	  -v `pwd`/certs:/certs \
+	  -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+	  -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+	  registry:2
+	docker daemon 监听端口
+	ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
+	创建swarm网络
+	swarm（docker1.12以后支持的集群管理工具）实现Overlay模式
+	具体步骤： 
+	1 启动swarm集群
+		管理节点：docker swarm init --advertise-addr <MANAGER1-IP>
+		普通节点：docker swarm join --token
+	2 创建Overlay网络
+		docker network create --driver=overlay --attachable attachable-overlay
+	3 docker中容器加入到overlay网络中
+		docker run --net=attachable-overlay
+《redis设计与实现》阅读笔记
+	sds(simple dynamic 		string):redis以sds作为默认的字符串存储结构，只有日志打印的地方用的是c的字符串；
+		struct sds {
+		int free;
+		int len;
+		char[] buf;
+		}
+	sds的优点：
+		O(1)时间获取字符串长度:sds.len；
+		空间预分配：sds.buf长度小于1MB时，free=len；超过1MB，free的长度为1MB；
+		惰性空间释放同时提供api可以强制释放sds的空余空间；空间重复利用； 
+		二进制安全：由于buf不是一'\0'作为结尾，因此数据在sds中是完整的，sds可以存储任何数据的二进制，这也是sds.buf被称为字节数组；
+		可以复用部分string.h的库函数
+	
