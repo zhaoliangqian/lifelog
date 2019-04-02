@@ -1,0 +1,10 @@
+1：
+docker容器中的网络和宿主机的网络无法双向通信问题
+    目前有2种解决方案：容器的子网和宿主机子网一致、采用集群管理工具k8s
+    由于当前版本切换k8s需要一定的时间，暂时不采用k8s，后期尝试接入，本期采用前者方案；
+    后期接入k8s主要参考方案：360的开源项目wayne，
+	https://www.kubernetes.org.cn/4872.html
+	https://github.com/kubernetes-client/java
+
+2:
+docker registry启动命令：docker run -d -p 5000:5000 -v `pwd`/data:/var/lib/registry --restart=always --name registry:latest
