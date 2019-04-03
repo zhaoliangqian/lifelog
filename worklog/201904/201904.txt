@@ -1,0 +1,34 @@
+1：
+docker容器中的网络和宿主机的网络无法双向通信问题
+    目前有2种解决方案：容器的子网和宿主机子网一致、采用集群管理工具k8s
+    由于当前版本切换k8s需要一定的时间，暂时不采用k8s，后期尝试接入，本期采用前者方案；
+    后期接入k8s主要参考方案：360的开源项目wayne，
+	https://www.kubernetes.org.cn/4872.html
+	https://github.com/kubernetes-client/java
+
+2:
+docker命令：
+	docker registry启动命令：docker run -d -p 5000:5000 -v `pwd`/data:/var/lib/registry --restart=always --name registry:latest
+	docker ssl: 
+	openssl req -newkey rsa:2048 -nodes -sha256 -keyout certs/domain.key -x509 -days 365 -out certs/domain.crt
+	docker run -d -p 5000:5000 --restart=always --name registry \
+	  -v `pwd`/data:/var/lib/registry \
+	  -v `pwd`/certs:/certs \
+	  -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+	  -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+	  registry:2
+	docker daemon 监听端口
+	ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
+	创建swarm网络
+	swarm（docker1.12以后支持的集群管理工具）实现Overlay模式
+	具体步骤： 
+	1 启动swarm集群
+		管理节点：docker swarm init --advertise-addr <MANAGER1-IP>
+		普通节点：docker swarm join --token
+	2 创建Overlay网络
+		docker network create --driver=overlay --attachable attachable-overlay
+	3 docker中容器加入到overlay网络中
+		docker run --net=attachable-overlay
+
+3：
+持续集成系统增加功能：docker部署后，能够查看环境内的部署信息； 
