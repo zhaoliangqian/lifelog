@@ -1,0 +1,126 @@
+1：
+docker容器中的网络和宿主机的网络无法双向通信问题
+    目前有2种解决方案：容器的子网和宿主机子网一致、采用集群管理工具k8s
+    由于当前版本切换k8s需要一定的时间，暂时不采用k8s，后期尝试接入，本期采用前者方案；
+    后期接入k8s主要参考方案：360的开源项目wayne，
+	https://www.kubernetes.org.cn/4872.html
+	https://github.com/kubernetes-client/java
+
+2:
+docker命令：
+	docker registry启动命令：docker run -d -p 5000:5000 -v `pwd`/data:/var/lib/registry --restart=always --name registry:latest
+	docker ssl: 
+	openssl req -newkey rsa:2048 -nodes -sha256 -keyout certs/domain.key -x509 -days 365 -out certs/domain.crt
+	docker run -d -p 5000:5000 --restart=always --name registry \
+	  -v `pwd`/data:/var/lib/registry \
+	  -v `pwd`/certs:/certs \
+	  -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+	  -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+	  registry:2
+	docker daemon 监听端口
+	ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
+	创建swarm网络
+	swarm（docker1.12以后支持的集群管理工具）实现Overlay模式
+	具体步骤： 
+	1 启动swarm集群
+		管理节点：docker swarm init --advertise-addr <MANAGER1-IP>
+		普通节点：docker swarm join --token
+	2 创建Overlay网络
+		docker network create --driver=overlay --attachable attachable-overlay
+	3 docker中容器加入到overlay网络中
+		docker run --net=attachable-overlay
+《redis设计与实现》阅读笔记
+	sds(simple dynamic 		string):redis以sds作为默认的字符串存储结构，只有日志打印的地方用的是c的字符串；
+		struct sds {
+		int free;
+		int len;
+		char[] buf;
+		}
+	sds的优点：
+		O(1)时间获取字符串长度:sds.len；
+		空间预分配：sds.buf长度小于1MB时，free=len；超过1MB，free的长度为1MB；
+		惰性空间释放同时提供api可以强制释放sds的空余空间；空间重复利用； 
+		二进制安全：由于buf不是一'\0'作为结尾，因此数据在sds中是完整的，sds可以存储任何数据的二进制，这也是sds.buf被称为字节数组；
+		可以复用部分string.h的库函数
+	链表：redis的链表结构是双向链表，其节点的结构如下： 
+		struct listNode{
+			struct listNode *prev; 
+			struct listNode *next; 
+			void *value; 
+		}
+		链表的结构： 
+		struct list {
+			listNode *head; 
+			listNode *tail; 
+			unsigned long len; 
+			//dup free match function
+		}
+		优点：头尾查询、长度查询、采用指着，支持多种类型； 
+	字典：也就是我们常用的hashmap，其中主要包含以下结构体：
+		struct dict {
+			dictType *type; //包含字典操作的函数
+			void *privdata; //传给类型特定函数的可选参数；
+			dictht ht[2]; //ht[1]用于resize
+			int rehashidx; //-1不在resize，0正在resize
+		}
+		struct dictht {
+			dictEntry *table;
+			size;
+			sizemask; 
+			used;
+		}
+		struct dictEntry {
+			void *key; 
+			union {
+			void *,
+			unsigned_int_64,
+			int_64
+			} value ;
+			dictEntry *next; 
+		}
+		优点：resize不是一步完成，而是渐进式的，在resize的过程中继续提供读写服务，只不过添加操作只会操作到ht[1]上，读操作和2个都读取（如果ht[0]未取到的情况下）；
+		hash算法是murmurhash2，该算法的特点是 键即使是有规律的也能获得很好的随机分布；
+	调表：代替红黑树实现有序链表的快速查找，主要由2个结构体组成：
+		struct skipListNodeList {
+			skipListNode *head; //跳表的头，表头不存储元素
+			skipListNode *tail; //跳表的尾
+			level; //层高
+			length; //元素数量
+		}
+		struct skipListNode {
+		    level[];//层数组
+		    *obj;//元素
+		    double score；//节点按照分值排列
+		}
+	整数集合：当集合中的元素数量不多，且都是整数时，将会采用intset存储，其结构体如下： 
+		struct intset {
+			uint32_t encoding; //元素的类型
+			uint32_t length; 
+			int8_t contents[]; //这里的类型并不是实际的类型， 实际的类型由encoding控制
+		}
+	压缩列表:当元素数量不多，且元素要么是小整数要么是短字符串时，采用这种数据结构用来节约内存； 
+	对象： redis中对象的数据结构： 
+		struct redisObject {
+			unsigned type: 4; 
+			unsigned encoding: 4; 
+			void *ptr; //底层结构体指针
+		}
+		字符串对象：底层实现有三种
+			int: long型
+			raw: >32字节字符串
+			embstr: <32字节字符串
+		链表： 底层实现2种
+			zipList: 每个元素小于64字节，且元素数量小于512
+			linkedList: 其余情况
+		哈希对象：底层实现2种
+			zipList: 
+			hashtable
+		集合对象：底层实现2种
+			intset: 整数、元素个数小于512
+			hashtable
+		有序集合： 底层实现2种
+			zipList: 元素个数小于128，每个元素小于64字节
+			skipList: 其余
+	数据库：redis的数据库是数据库实例数组，默认是0号数据库，可以通过select进行切换； 
+	失效时间键删除策略：惰性删除、定期删除结合实现； 
+		
