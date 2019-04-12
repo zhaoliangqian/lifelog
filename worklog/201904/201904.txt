@@ -26,9 +26,46 @@ docker命令：
 		管理节点：docker swarm init --advertise-addr <MANAGER1-IP>
 		普通节点：docker swarm join --token
 	2 创建Overlay网络
-		docker network create --driver=overlay --attachable attachable-overlay
+		docker network create --driver=overlay --attachable attachable-overlay	
 	3 docker中容器加入到overlay网络中
 		docker run --net=attachable-overlay
 
 3：
-持续集成系统增加功能：docker部署后，能够查看环境内的部署信息； 
+持续集成系统增加功能：docker部署后，能够查看环境内的部署信息; 
+
+4-7：
+假期游玩；
+
+8: 
+	判断一个linux机器是否是vm：
+dmidecode -s system-product-name
+	nginx应用和zookeeper应用的查看问题；
+简化处理，在数据库中默认配置nginx和zookeeper的应用；
+insert into fci_app(app_id, app_name,  app_deploy_name, app_deploy_desc, project_id, status, priority,  docker_image, adder_name, add_time, updater_name, update_time)
+values (1, 'nginx', 'nginx', 'nginx server', 0, 1, 0,  'djl_nginx:29', 'system', NOW(), 'system', NOW());
+insert into fci_app(app_id, app_name,  app_deploy_name, app_deploy_desc, project_id, status, priority,  docker_image, adder_name, add_time, updater_name, update_time)
+values (2, 'zookeeper', 'zookeeper', 'zookeeper server', 0, 1, 0,  '3.4', 'system', NOW(), 'system', NOW());
+	linux df命令输出不换行： 
+http://www.361way.com/df/58.html
+	ip route show可以查看机器的网关
+9: 
+	docker环境释放后，ip释放问题：
+	部署页面重新设计； 
+	mic编程规范培训； 
+10: 
+	《spring源码深度解析》p48
+	金字塔原理——规划2019
+	fci项目选择部署时，只能选择空闲环境，正在使用环境不能部署； 
+	docker的cmd和entrypoint： cmd是容器启动默认的参数 entrypoint用于指定容器启动是执行的命令，2这联合使用可以理解为 "entrypoint中指定的命令" "cmd中的参数"
+	zk容器启动会一直运行，是由于cmd中的参数为zkServer.sh start-foreground服务以前台启动，从而实现容器不关闭； 
+11：
+	《spring源码深度解析》p60
+	zookeeper自动启动； 
+	sian自动构建镜像； 
+	周例会
+12：
+	《spring源码深度解析》p100
+	sian镜像制作
+	
+	
+		
