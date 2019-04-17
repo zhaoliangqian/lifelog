@@ -66,6 +66,30 @@ http://www.361way.com/df/58.html
 12：
 	《spring源码深度解析》p100
 	sian镜像制作
-	
-	
-		
+15： 
+mysql的引擎：innodb 和 myisam
+	事务：前者支持； 后者不支持； 
+	索引：都是b+树，但是前世是聚集索引，后者是非聚集索引；
+	行锁：前者支持，后者不支持； 
+	更新操作前者更快，由于行锁，尤其在并发条件下； 
+16：
+sian镜像制作成功、部署成功； 
+jvm过完； 
+17： 
+docker容器想要指定hosts不能再镜像中修改/etc/hosts 需要通过--add-host命令指定
+mysql的innodb和myisam比较：innodb支持事务、innodb的主键默认采用聚集索引，其他索引通过和主键索引关联，所以总的来说都是聚集索引myisam采用非聚集索引，聚集索引的优势在于，对于主键的范围查找，其读取的数据有效率更高，io次数相对减少；myisam记录了表的总的数量，因此count操作更加快；innodb由于采用行锁，因此其更新操作更高效相对于myisam的表锁； 
+mysql的常见问题：
+http://www.cnblogs.com/crazylqy/p/7611069.html ：图解innodb引擎死锁原理； 
+https://blog.csdn.net/forezp/article/details/89167125
+https://dba.stackexchange.com/questions/37187/why-does-that-query-cause-lock-wait-timeouts
+tcpdump 命令使用介绍：
+https://blog.csdn.net/gh201030460222/article/details/80573526
+https://blog.csdn.net/zhuxineli/article/details/14455029
+常用缓存中间件的使用与比较（redis、memchache）
+18：
+fci环境升级； 
+常用mq中间件的使用与比较（kafka，rabbitMq，activeMq）
+19：
+fci使用与优化；
+b树：https://www.jianshu.com/p/db226e0196b4
+二叉树、红黑树、图论；
