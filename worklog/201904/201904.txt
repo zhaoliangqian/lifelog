@@ -85,11 +85,30 @@ https://dba.stackexchange.com/questions/37187/why-does-that-query-cause-lock-wai
 tcpdump 命令使用介绍：
 https://blog.csdn.net/gh201030460222/article/details/80573526
 https://blog.csdn.net/zhuxineli/article/details/14455029
-常用缓存中间件的使用与比较（redis、memchache）
-18：
-fci环境升级； 
+18-22：
+容器内无法使用jinfo等命令查看jvm原因：
+	ptrace被关闭了： https://www.cnblogs.com/tangr206/articles/3094358.html
+	fix:https://blog.csdn.net/kinginblue/article/details/78078028
 常用mq中间件的使用与比较（kafka，rabbitMq，activeMq）
-19：
-fci使用与优化；
+	kafka吞吐量更佳，rabbitmq和activemq支持事务。根据自己的业务情况，选择合适的MQ，
+	这里记录下《kafka权威指南》的阅读笔记
+	第一章节：
+		为啥选择kafka：
+			多个消费者，kafka不同于其他的消息系统，它可以支持不同的消费者组，他们可以消费同一个消息； 
+			基于磁盘：持久化；
+			伸缩性：支持broker的扩容； 
+			高性能：kafka支持亚秒级别的延时；
+		使用场景：
+			用户活动跟踪；
+			日志记录； 
+			提交日志； 
+			流处理；
+			消息传递； 
+	第二章节：
+		依赖zk，zk保存了broker的元数据，zookeeper.connect=zkhost:zkport/chroot 其中path（chroot）如果不存在会自动创建该路径； 
+		分区数量的选择：根据吞吐量、实际机器的网络、磁盘io速度确定；	kafka的消费者会使用页面缓存技术，缓存部分磁盘上的消息，较少等待磁盘io时间，因此kafka最好单独部署，减少和其他应用的共享页面缓存； 
+linuxx学习：http://c.biancheng.net/linux_tutorial/
+		
+常用缓存中间件的使用与比较（redis、memchache）
 b树：https://www.jianshu.com/p/db226e0196b4
 二叉树、红黑树、图论；
