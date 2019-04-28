@@ -92,7 +92,7 @@ https://blog.csdn.net/zhuxineli/article/details/14455029
 常用mq中间件的使用与比较（kafka，rabbitMq，activeMq）
 	kafka吞吐量更佳，rabbitmq和activemq支持事务。根据自己的业务情况，选择合适的MQ，
 	这里记录下《kafka权威指南》的阅读笔记
-	第一章节：
+	第一章节：介绍
 		为啥选择kafka：
 			多个消费者，kafka不同于其他的消息系统，它可以支持不同的消费者组，他们可以消费同一个消息； 
 			基于磁盘：持久化；
@@ -104,14 +104,28 @@ https://blog.csdn.net/zhuxineli/article/details/14455029
 			提交日志； 
 			流处理；
 			消息传递； 
-	第二章节：
+	第二章节：安装
 		依赖zk，zk保存了broker的元数据，zookeeper.connect=zkhost:zkport/chroot 其中path（chroot）如果不存在会自动创建该路径； 
 		分区数量的选择：根据吞吐量、实际机器的网络、磁盘io速度确定；	kafka的消费者会使用页面缓存技术，缓存部分磁盘上的消息，较少等待磁盘io时间，因此kafka最好单独部署，减少和其他应用的共享页面缓存； 
 	第三章节：生产者
 		发送模式主要有2种：同步发送、异步回调发送，其中同步发送如果不用get阻塞，发送速度会提升，但是可能会出现消息丢失的情况，除非记录日志信息，否则尽量别采用这种方式； 
 		生产者配置：acks多少个partition已经同步就确定发送成功； 【buffer.memory】决定着等到网络发送的缓存池的大小；【compression.type】压缩类型；【retries】重试次数；【batch.size】【linger.ms】决定何时将彼此发送到kafka；【max.in.flight.requests.per.connection】在需要消息顺序入partiion的场景中设置为1；
 		序列化：可以自定义，但是建议使用avro这种语言无关的序列化构造器，需要配合confluent schema registry一起使用，csr使用kafka的topic:_schema存储schema，csr支持集群，可以只是2中master选举，broker选举和zk选举根据配置确定； 
-代码是否运行jvm检查；		
+		自定义分区器：通过实现分区接口，并且在properties中设置Kafka.Partition.Class.name 为该实现类。
+	第四章节：消费者
+		再均衡：分区所有权从一个消费者转移到另一个消费者，这样的行为被称为再均衡。例如：消费者崩溃、增加了分区等行为； 
+		消费者心跳：在拉取消息和提交消息的时候，消费者会发送心跳。如果消费者没有超出配置时间没有发送心跳或者消费者被清理，会触发再均衡； 
+		单线程：kafka的消费者不能安全地多线程共享，可以使用线程池，创建多个消费者，每个消费者在一个线程中拉取消息。
+		close方法：当consumer使用close方法时，会关闭socket连接、并且触发再均衡； 
+		通过实现再均衡监听以及将offset保存在db中，实现消息的不重复消费； 
+	第五章节：原理
+		controller选举：zk临时节点/controller
+		broker列表：zk临时节点/broker/id
+		复制：跟随副本需要同步首领副本的消息，如果想要确保消息不会丢失，生产者需要进行配置同步副本数；
+		副本：只有首领副本负责处理消息，其他副本只进行同步； 
+		客户端请求非首领broker：client会出错；
+		文件：kafka会为每个文件保存一个句柄，及时文件不是活跃的，根据单进程句柄数限制和系统句柄数限制调优； 
+	
 linuxx学习：http://c.biancheng.net/linux_tutorial/
 常用缓存中间件的使用与比较（redis、memchache）
 apache curator的使用demo：
