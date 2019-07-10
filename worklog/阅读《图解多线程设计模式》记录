@@ -1,0 +1,81 @@
+大部分时间编码都是做业务操作，很少使用多线程进行编程，由于多线程的操作往往被框架封装。编写多线程代码难度大，其原因是难以调试，出现bug，难以分析。
+本书介绍编写多线程代码常用的设计模式，类似于编写多线程代码时，可以使用的模板，理解这些设计模式对于我们编写多线程代码又很大的帮助。
+
+在编写多线程代码时，必须遵守的准则：安全性（对象的状态与设计预期一致）、生存性（必要的执行必须运行，例如异常终止运行就违反次规则），在遵守上述规则的基础上，需要提升可复用性和性能。接下来，依次说明各个设计模式。
+
+Single Threaded Execution： 单线程执行
+Roles：Shared Resource （可被多线程访问的共享资源）
+How：对临界区（出现竞态条件发生的代码区）使用synchronize，实现单线程顺序执行
+When：多线程访问、状态有可能变化（如果是不可变状态的实例，则不需要使用）
+key points：
+	生存性：对多个共享资源加锁时，避免死锁
+	可复用性：避免继承线程安全的类，如果对子类的unsafe方法没有进行synchronize控制，会出现继承反常
+	性能：较少比必要的synchronize、缩小临界区的大小
+
+Immutable：不可变
+Roles： Immutable （不可变资源）
+How：使用final修饰类和类的属性，对于修饰的属性如果存在mutable的，在获取该属性的时候，返回其拷贝
+When： 对象一经创建后便不会改变
+key points：
+	安全性： 注意类的修改，一旦immutable类变成mutable，则会有安全性问题
+	复用性： final修饰类，避免继承；
+	性能： immutable最大的优势就是避免synchronize带来的性能损失。immutable和mutable的合理转换会带来巨大的性能提升，例如StringBuilder和String的相互转换
+	
+Guarded Suspension： 不满足等待
+Roles：GuardedObject（被守护的对象，该对象具有守护方法，当线程调用方法时，若守护条件不成立则需要等待）
+How: 形如 synchronize func() {while (守护条件非逻辑) { wait(); } readyToExecuteBody();}
+When： 存在循环检查、需要等待一段时间再检查
+key points：
+	安全性： 守护条件判断是根据被守护对象的状态，状态一直出错，就会出现安全性问题
+	性能： 通过wait，避免线程长时间占用cpu，在Future中就使用该模式实现异步编程
+	
+Balking：不满足返回
+Roles：GuardedObject（被守护的对象，该对象具有守护方法，当线程调用方法时，若守护条件不成立则返回）
+How： 形如 synchronize func() {if (守护条件非逻辑) { return; } readyToExecuteBody();}
+When： 类似于单线程的卫语句
+key points：
+	安全性：与Guarded Suspension类似
+
+Producer-Consumer： 生产者消费者
+Roles： Producer Consumer Data Channel
+How： 生产者生产Data放在Channel中供消费者获取，Channel提供put/take方法，并通过synchronize守护自身安全性
+When： 生产者需要安全的将数据传递给消费者、并且双方可能不止一个（如果都是一个，则是Pipe模式）
+key points：
+	安全性：线程安全统一由Channel提供维护
+	复用性：多线程编码时很多时候使用BlockingQueue，它就是该模式中的Channel角色
+	性能： 通过合理设置Channel的缓存区大小提升性能
+
+Read-Write Lock： 读写锁
+Roles： Reader Writer SharedResource ReadWriteLock
+How： 由SharedResource持有ReadWriteLock，调用ReadWriteLock的lock/unlock方法
+When： 当读取操作比较繁重，但是读取操作可以并行，且读取的频率高于写入频率
+key points：
+	安全性：由ReadWriteLock统一控制lock/unlock，SharedResource在使用使用unlock时需要放在finally块中
+	复用性：多线程编码时很多时候使用的java.util.concurrent.locks包内提供的ReadWriteLock，就是该模式中的ReadWriteLock角色
+	性能： 读取操作比较重且读取频率高于写入，则性能较好
+
+Thread-Per-Message： 单任务线程， client请求host去执行一个任务，host启动一个新的线程去执行
+Roles： Client Host 
+How： host提供execute方法，方法中启用线程执行任务，client调用host.execute
+When： 多个任务实例待执行，任务的执行顺序没有依赖
+key points：
+    性能： host每次接受一个任务都会创建新的线程去执行，会产生一定的性能损耗
+	
+Worker Thread：工作线程，与Thread-Per-Message类似，但是优化了其性能， 采用线程工厂来执行任务
+key points：
+	性能：利用线程池可以提升线程重复回收带来的消耗，例如java提供的java.util.concurrent.Executor ExecutorService， ps：使用完的线程池需要通过shutdown()回收，否则线程一直运行
+
+Future: 获取线程执行的任务得到的结果
+Roles： client host virtualdata realdata futuredata
+How： client请求host执行任务，host先返回future（期货），client拿到future后，通过getdata方法获取任务执行后得到的realdata
+when： 当采用Thread-Per-Message或者Worker Thread模式时，且需要获取异步线程执行的结果
+    性能： 与Thread-Per-Message或者Worker Thread模式类似
+
+Two-Phase Termination： 二阶段终止
+Roles： Termination-Requestor Terminator
+How： requestor发起终止请求，terminator检查终止状态，进行终止
+key points： 
+	安全性： 不能使用Thread.stop方法，否则如果线程处于临界区执行，实例会失去安全性。
+	生存性： 对于处于阻塞的线程需要考虑异常处理， 例如线程池的shutdownnow方法， 如果任务当前处于执行阻塞状态，被shutdownnow通过interrupt方法中断， 会产生异常导致线程池无法退出； 
+	
+未完待续
