@@ -1,0 +1,24 @@
+reactive stream 是jdk9引入的一套基于订阅者发布者的数据处理规范；
+reactive stream规范中有以下几个角色： 
+publisher 
+subscriber
+subscription
+processor
+
+其关系为： 
+publisher创建subscription， 当publisher.subscribe方式执行时，会将subscription传递给subscriber
+subscription充当2者之间的中间
+subscriber通过request（n）方法请求n个数据 -> publisher通过调用subscriber的onNext方法将数据一项一项传递给subscriber
+->当传递结束的时候，调用subscriber的OnComplete，当出现异常的时候调用subscriber的onError方法
+
+发展历史：
+rxjava出现在反应式编程规范出现前，是java反应式编程的先驱，在反应式编程规范出现后，spring构建了reactor库，spring5中的反应式则是基于reactor库，
+因此rxjava在2.x版本虽然在兼容此规范，但是由于历史版本兼容问题，导致rxjava的代码理解上难度较大。
+
+这里我们开始学习下reactor
+reactor中2个主要的角色
+Flux Mono
+Flux：1~n个序列的发布者
+Mono：0|1个序列的发布者
+其功能依赖丰富的操作符，常用的有filter/flapmap/concatmap
+其执行依赖调度器schedualer
