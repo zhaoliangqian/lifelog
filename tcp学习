@@ -1,0 +1,34 @@
+tcp是什么？
+面向连接的、可靠的、基于字节流的传输协议transmission control protocal 
+
+tcp头部的组成
+source port/destination port 
+sequence number
+ack number 如果已经接受到n，则ack number=n+1
+tcp flag : 
+  ACK(请求时0，响应时1)、SYN(和ACK配合使用用于建立请求连接)、FIN（请求者发送告诉接受者这是最后一个数据包）
+window size 滑动窗口大小，用于流量控制
+
+为什么要三次握手？
+由于服务端和客户端都需要将自己发送的起始序列号发送对方，并且对方确认收到。也就是上问中的sequence number/ack number的使用由于实现可靠性传输
+这也是区别udp的一点
+
+三次握手过程
+1 client --（SYN syn=x）--> server
+2 server --(SYN ACK syn=y ack=x+1)---> client  
+3 client --(ACK ack=y+1) ---> server
+重要状态： 
+SYNC_RECV:服务器受到SYN会发送SYN_ACK进入等待，这容易造成SYNC Flood攻击，不过tcp协议中采用了SYNC cookie算法进行校验合法性
+
+四次握手断开
+1 client -- (FIN fin=x) --->server 
+2 server ---(ACK ack=x+1) ---> client  server 进入close_wait client 进入wait_fin
+3 server ---(FIN fin=y) ---> client server进入last_wait client 进入time_wait
+4 client ---(ACK ack=y+1)---> server server进入close
+在断开过程中的几种状态： 
+close_wait 被动发起的一方出现
+time_wait 用于保证socket重分配后不会受到之前延迟重发的报文的影响； 
+
+help：
+查看tcp状态统计
+netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'  
