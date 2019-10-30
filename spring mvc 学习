@@ -1,0 +1,20 @@
+定义： 
+基于model-view-controller web框架，其核心为DispatcherServet，负责接收请求，查询请求映射、适配访问controller、视图解析、请求响应；有2种配置方式：
+  1、在web.xml中配置servet 
+  2、在servet3版本中可以通过可以通过实现WebApplicationInitializer接口，进行注册servet
+  
+特殊的bean
+dispatherServlet委派特殊的bean去处理request
+  1、handlerMapping，主要有2种RequestMapping注解的方法，注册SimpleUrlHandlerMapping
+  2、handlerAdapter，适配处理器
+  3、exceptionResolver
+  4、viewResolver
+  5、LocaleResolver，LocaleContextResolver，ThemeResolver，FlashMapManager
+  
+异常处理
+  1、可以实现HandlerExceptionResolver，实现统一的异常处理 
+  2、可以在controller中的方法上注解ExceptionResolver。
+ 
+视图
+  1、视图可以配置多个bean用于处理视图； 
+  2、velocity引擎使用的是ContentNegotiatingViewResolver，用于匹配文件名称进行解析
